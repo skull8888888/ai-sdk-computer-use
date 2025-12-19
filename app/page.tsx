@@ -4,6 +4,7 @@ import { PreviewMessage } from "@/components/message";
 import { getDesktopURL } from "@/lib/e2b/utils";
 import { useScrollToBottom } from "@/lib/use-scroll-to-bottom";
 import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
 import { useEffect, useState } from "react";
 import { Input } from "@/components/input";
 import { Button } from "@/components/ui/button";
@@ -27,22 +28,22 @@ export default function Chat() {
   const [streamUrl, setStreamUrl] = useState<string | null>(null);
   const [sandboxId, setSandboxId] = useState<string | null>(null);
 
+  const [input, setInput] = useState("");
+
   const {
     messages,
-    input,
-    handleInputChange,
-    handleSubmit,
     status,
     stop: stopGeneration,
-    append,
+    sendMessage,
     setMessages,
   } = useChat({
-    api: "/api/chat",
     id: sandboxId ?? undefined,
-    body: {
-      sandboxId,
-    },
-    maxSteps: 30,
+    transport: new DefaultChatTransport({
+      api: "/api/chat",
+      body: {
+        sandboxId,
+      },
+    }),
     onError: (error) => {
       console.error(error);
       toast.error("There was an error", {
@@ -53,6 +54,17 @@ export default function Chat() {
     },
   });
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+    sendMessage({ text: input });
+    setInput("");
+  };
+
   const stop = () => {
     stopGeneration();
 
@@ -60,7 +72,7 @@ export default function Chat() {
     const lastMessageLastPart = lastMessage?.parts.at(-1);
     if (
       lastMessage?.role === "assistant" &&
-      lastMessageLastPart?.type === "tool-invocation"
+      lastMessageLastPart?.type?.startsWith("tool-")
     ) {
       setMessages((prev) => [
         ...prev.slice(0, -1),
@@ -70,12 +82,9 @@ export default function Chat() {
             ...lastMessage.parts.slice(0, -1),
             {
               ...lastMessageLastPart,
-              toolInvocation: {
-                ...lastMessageLastPart.toolInvocation,
-                state: "result",
-                result: ABORTED,
-              },
-            },
+              state: "output-available" as const,
+              output: ABORTED,
+            } as any,
           ],
         },
       ]);
@@ -242,7 +251,7 @@ export default function Chat() {
               <PromptSuggestions
                 disabled={isInitializing}
                 submitPrompt={(prompt: string) =>
-                  append({ role: "user", content: prompt })
+                  sendMessage({ text: prompt })
                 }
               />
             )}
@@ -290,7 +299,7 @@ export default function Chat() {
           <PromptSuggestions
             disabled={isInitializing}
             submitPrompt={(prompt: string) =>
-              append({ role: "user", content: prompt })
+              sendMessage({ text: prompt })
             }
           />
         )}

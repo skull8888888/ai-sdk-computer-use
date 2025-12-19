@@ -114,21 +114,22 @@ export const computerTool = (sandboxId: string) =>
           throw new Error(`Unsupported action: ${action}`);
       }
     },
-    experimental_toToolResultContent(result) {
+    toModelOutput(result) {
       if (typeof result === "string") {
-        return [{ type: "text", text: result }];
+        return { type: "text", value: result };
       }
       if (result.type === "image" && result.data) {
-        return [
-          {
-            type: "image",
+        return {
+          type: "content",
+          value: [{
+            type: "media",
             data: result.data,
-            mimeType: "image/png",
-          },
-        ];
+            mediaType: "image/png",
+          }],
+        };
       }
       if (result.type === "text" && result.text) {
-        return [{ type: "text", text: result.text }];
+        return { type: "text", value: result.text };
       }
       throw new Error("Invalid result format");
     },
