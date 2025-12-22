@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */ 
   
-  serverExternalPackages: ['@lmnr-ai/lmnr'],
+  serverExternalPackages: ['@lmnr-ai/lmnr', "@lmnr-ai/claude-code-proxy"],
 
   async headers() {
     return [

@@ -1,9 +1,6 @@
-import { anthropic } from "@ai-sdk/anthropic";
-import { streamText, UIMessage, Tool, convertToModelMessages, stepCountIs } from "ai";
+import { UIMessage } from "ai";
 import { killDesktop } from "@/lib/e2b/utils";
-import { bashTool, computerTool } from "@/lib/e2b/tool";
-import { prunedMessages } from "@/lib/utils";
-import { getTracer } from '@lmnr-ai/lmnr';
+import { runAgent } from "@/lib/agent";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 300;
@@ -12,28 +9,10 @@ export async function POST(req: Request) {
   const { messages, sandboxId }: { messages: UIMessage[]; sandboxId: string } =
     await req.json();
   try {
-    const result = streamText({
-      model: anthropic("claude-sonnet-4-5"), // Using Sonnet for computer use
-      system:
-        "You are a helpful assistant with access to a computer. " +
-        "Use the computer tool to help the user with their requests. " +
-        "Use the bash tool to execute commands on the computer. You can create files and folders using the bash tool. Always prefer the bash tool where it is viable for the task. " +
-        "Be sure to advise the user when waiting is necessary. " +
-        "If the browser opens with a setup wizard, YOU MUST IGNORE IT and move straight to the next step (e.g. input the url in the search bar).",
-      messages: convertToModelMessages(prunedMessages(messages)),
-      tools: { computer: computerTool(sandboxId) as Tool<unknown, unknown>, bash: bashTool(sandboxId) as Tool<unknown, unknown> },
-      stopWhen: stepCountIs(30),
-      providerOptions: {
-        anthropic: { cacheControl: { type: "ephemeral" } },
-      },
-      experimental_telemetry: {
-        isEnabled: true,
-        tracer: getTracer(),
-      }
-    });
 
-    // Create response stream with UI message format for useChat
-    return result.toUIMessageStreamResponse();
+   return runAgent(messages, sandboxId);
+
+    // Create response stream with UI message format for useCha
   } catch (error) {
     console.error("Chat API error:", error);
     await killDesktop(sandboxId); // Force cleanup on error

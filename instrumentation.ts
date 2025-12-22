@@ -4,6 +4,9 @@ export async function register() {
       const { Laminar } = await import('@lmnr-ai/lmnr');
       Laminar.initialize({
         projectApiKey: process.env.LMNR_PROJECT_API_KEY,
+        baseUrl: "http://localhost",
+        httpPort: 8000,
+        grpcPort: 8001,
       });
     }
   }
