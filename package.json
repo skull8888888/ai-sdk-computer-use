@@ -8,11 +8,12 @@
     "start": "next start",
     "lint": "next lint"
   },
+  "type": "module",
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.0",
     "@ai-sdk/react": "^2.0.0",
     "@e2b/desktop": "^1.7.3",
-    "@lmnr-ai/lmnr": "file:../lmnr-ts",
+    "@lmnr-ai/lmnr": "file:../ts-sdk",
     "@radix-ui/react-label": "^2.1.2",
     "@radix-ui/react-slot": "^1.1.2",
     "@vercel/analytics": "^1.5.0",

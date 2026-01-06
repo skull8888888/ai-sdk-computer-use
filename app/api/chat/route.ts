@@ -1,6 +1,12 @@
-import { UIMessage } from "ai";
+import { generateText, UIMessage } from "ai";
 import { killDesktop } from "@/lib/e2b/utils";
-import { runAgent } from "@/lib/agent";
+// import { getTracer, laminarLanguageModel, observeRollout } from "@lmnr-ai/lmnr";
+// import { anthropic } from "@ai-sdk/anthropic";
+// import { prunedMessages } from "@/lib/utils";
+// import { computerTool, bashTool } from "@/lib/e2b/tool";
+// import { Tool } from "ai";
+// import { convertToModelMessages, stepCountIs } from "ai";
+import { getResponse } from "@/lib/agent";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 300;
@@ -10,7 +16,12 @@ export async function POST(req: Request) {
     await req.json();
   try {
 
-   return runAgent(messages, sandboxId);
+    const result: string = await getResponse(sandboxId, messages);
+
+    return new Response(result, {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
 
     // Create response stream with UI message format for useCha
   } catch (error) {
